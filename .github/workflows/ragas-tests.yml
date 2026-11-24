@@ -1,0 +1,49 @@
+# Runs the RAG quality demo on every push (and on demand). Reports are always uploaded.
+name: ragas-tests
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  rag-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}   # add it under Settings > Secrets and variables > Actions
+      HF_HUB_DISABLE_XET: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Cache the HuggingFace embedding model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-all-MiniLM-L6-v2
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Say clearly whether the API key is available
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::warning::ANTHROPIC_API_KEY secret is NOT set. Only tests that need no key will run; the rest are skipped."
+          else
+            echo "ANTHROPIC_API_KEY is set. Running the full suite."
+          fi
+
+      - name: Run the demo (tests + reports)
+        run: python run_demo.py
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rag-quality-reports
+          path: reports/
+          if-no-files-found: warn

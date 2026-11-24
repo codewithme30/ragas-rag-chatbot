@@ -1,0 +1,78 @@
+[
+ {
+  "id": "vacation_days",
+  "topic": "vacation",
+  "question": "How many vacation days do full-time employees get per year?",
+  "reference": "15 days",
+  "short_answer": true,
+  "full_reference": "Full-time employees get 15 vacation days per year.",
+  "answerable": true
+ },
+ {
+  "id": "sick_days",
+  "topic": "sick leave",
+  "question": "How many paid sick days does each employee get per year?",
+  "reference": "10 days",
+  "short_answer": true,
+  "full_reference": "Every employee gets 10 paid sick days per year.",
+  "answerable": true
+ },
+ {
+  "id": "expense_deadline",
+  "topic": "expenses",
+  "question": "Within how many days must I submit an expense claim?",
+  "reference": "30 days",
+  "short_answer": true,
+  "full_reference": "Expense claims must be submitted within 30 days of the purchase.",
+  "answerable": true
+ },
+ {
+  "id": "carry_over",
+  "topic": "vacation",
+  "question": "Can I carry unused vacation days over into next year?",
+  "reference": "Yes, up to 5 unused vacation days can be carried over into the next calendar year. Any days above 5 expire on December 31.",
+  "answerable": true
+ },
+ {
+  "id": "total_paid_days_off",
+  "topic": "vacation + sick leave (two docs)",
+  "question": "In total, how many paid vacation and sick days does a full-time employee get per year?",
+  "reference": "A full-time employee gets 15 vacation days and 10 paid sick days per year, which is 25 paid days off in total.",
+  "answerable": true
+ },
+ {
+  "id": "money_for_home_and_learning",
+  "topic": "remote work + benefits (two docs)",
+  "question": "How much money can I get for setting up my home office, and how much for learning each year?",
+  "reference": "You get a one-time home office stipend of $500 and a learning budget of $1,000 per year.",
+  "answerable": true
+ },
+ {
+  "id": "new_baby",
+  "topic": "parental leave (rephrased)",
+  "question": "My baby was just born. How long can I stay at home and still get my full salary?",
+  "reference": "New parents get 12 weeks of fully paid parental leave.",
+  "answerable": true
+ },
+ {
+  "id": "doctors_note",
+  "topic": "sick leave (rephrased)",
+  "question": "I'm ill for two days. Will HR want a doctor's note?",
+  "reference": "No. A doctor's note is only required when you are out sick for more than 3 consecutive days.",
+  "answerable": true
+ },
+ {
+  "id": "office_days",
+  "topic": "hybrid work (rephrased)",
+  "question": "On which weekdays am I expected to be physically in the office?",
+  "reference": "Most teams are in the office on Tuesday, Wednesday and Thursday.",
+  "answerable": true
+ },
+ {
+  "id": "stock_options",
+  "topic": "NOT in the knowledge base",
+  "question": "Does Northwind Corp offer stock options to employees?",
+  "reference": "I don't know. The HR documents do not mention stock options.",
+  "answerable": false
+ }
+]

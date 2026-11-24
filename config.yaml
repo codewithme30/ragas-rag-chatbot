@@ -1,0 +1,139 @@
+# config.yaml - the ONE place to change models, thresholds and the plain-English
+# text that appears in reports. Nothing here is a secret (the API key lives in .env).
+
+models:
+  bot_llm: "claude-haiku-5-5"        # the chatbot we are testing
+  judge_llm: "claude-sonnet-5-5"     # the stronger model that grades the bot (Ragas judge)
+  embeddings: "sentence-transformers/all-MiniLM-L6-v2"   # local and free; used by bot AND Ragas
+
+bot:
+  top_k: 3            # how many chunks the bot retrieves per question
+  chunk_size: 400     # max characters per chunk (documents are split by paragraph first)
+
+ragas:
+  max_workers: 2      # keep low: the Anthropic API rate-limits parallel calls
+  timeout: 120        # seconds per judge call
+  max_retries: 5
+
+# ---------------------------------------------------------------------------
+# Metric settings.
+# threshold = the pass line.   direction = which way is "good".
+# The thresholds below are realistic STARTING points. Real teams tune them over
+# time: run on good data, look at the scores, then set the line just under what a
+# healthy bot achieves, and raise it as the bot improves.
+# ---------------------------------------------------------------------------
+metrics:
+  context_precision:
+    severity: 3            # 1 = most serious business risk; decides which risk is called 'biggest'
+    threshold: 0.70
+    direction: higher_is_better
+    plain_name: "Finds the right pages"
+    question_it_answers: "Of the HR pages the bot looked up, were they the relevant ones, with the best ones first?"
+    business_risk_if_low: "The bot reads the wrong pages, so answers get slower, costlier and more likely to be wrong."
+    likely_owner: "Engineering: retrieval (chunking, embeddings, top-k)"
+    failure_template: "Retrieval ranked irrelevant HR pages above the useful one."
+
+  context_recall:
+    severity: 2            # 1 = most serious business risk; decides which risk is called 'biggest'
+    threshold: 0.70
+    direction: higher_is_better
+    plain_name: "Finds ALL the needed pages"
+    question_it_answers: "Did the bot look up everything it needed to answer fully?"
+    business_risk_if_low: "The bot answers without the key policy in front of it, so answers are incomplete or guessed."
+    likely_owner: "Engineering: retrieval, or Content: the policy is missing or badly written"
+    failure_template: "The policy needed for a correct answer was never retrieved."
+
+  faithfulness:
+    severity: 1            # 1 = most serious business risk; decides which risk is called 'biggest'
+    threshold: 0.80
+    direction: higher_is_better
+    plain_name: "Sticks to the facts"
+    question_it_answers: "Does the bot only say things that are in our HR documents?"
+    business_risk_if_low: "The bot may invent policies; employees could act on wrong information (HR/legal exposure)."
+    likely_owner: "Engineering: prompt and guardrails"
+    failure_template: "The answer contains claims that are not in the HR documents."
+
+  answer_relevancy:
+    severity: 3            # 1 = most serious business risk; decides which risk is called 'biggest'
+    threshold: 0.70
+    direction: higher_is_better
+    plain_name: "Answers the question asked"
+    question_it_answers: "Does the answer actually address what the employee asked?"
+    business_risk_if_low: "Employees get rambling or off-topic replies, stop trusting the bot and go back to emailing HR."
+    likely_owner: "Engineering: prompt design"
+    failure_template: "The answer does not address the question that was asked."
+
+  factual_correctness:
+    severity: 1            # 1 = most serious business risk; decides which risk is called 'biggest'
+    threshold: 0.60       # lenient on purpose: a correct answer with extra detail still scores < 1.0
+    direction: higher_is_better
+    plain_name: "Gets the facts right"
+    question_it_answers: "Do the facts in the answer match the approved correct answer?"
+    business_risk_if_low: "Employees are told wrong numbers or rules (e.g. wrong vacation days), causing disputes and compliance risk."
+    likely_owner: "Engineering + HR: check the documents and the prompt"
+    failure_template: "The facts in the answer do not match the approved answer."
+
+  semantic_similarity:
+    severity: 3            # 1 = most serious business risk; decides which risk is called 'biggest'
+    threshold: 0.75
+    direction: higher_is_better
+    plain_name: "Means the same thing"
+    question_it_answers: "Even with different words, does the answer mean the same as the approved answer?"
+    business_risk_if_low: "The bot's answers drift away from the approved wording and meaning."
+    likely_owner: "Engineering: prompt and model choice"
+    failure_template: "The answer's meaning is far from the approved answer."
+
+  noise_sensitivity:
+    severity: 2            # 1 = most serious business risk; decides which risk is called 'biggest'
+    threshold: 0.20       # a MAXIMUM: this is the only metric where LOWER is better
+    direction: lower_is_better
+    plain_name: "Not distracted by junk"
+    question_it_answers: "When an irrelevant page sneaks in, does the bot wrongly use it in its answer?"
+    business_risk_if_low: "Irrelevant text leaks into answers, so employees get mixed-up or wrong information."
+    likely_owner: "Engineering: retrieval filtering and prompt"
+    failure_template: "The answer repeated information from an irrelevant page."
+
+  # --- Non-LLM metrics: free, instant, deterministic. Thresholds are low because
+  #     they compare WORDS, and a good answer can use different words. ---
+  bleu:
+    severity: 5            # 1 = most serious business risk; decides which risk is called 'biggest'
+    informational: true    # still tested, but excluded from the traffic light and the failure list (weak metric)
+    threshold: 0.10
+    direction: higher_is_better
+    plain_name: "Word overlap (BLEU)"
+    question_it_answers: "How many word sequences match the approved answer exactly?"
+    business_risk_if_low: "Wording differs a lot from the approved answer (not necessarily wrong, but worth a look)."
+    likely_owner: "QA: review whether the metric even fits this answer style"
+    failure_template: "Very few words match the approved answer."
+
+  rouge:
+    severity: 5            # 1 = most serious business risk; decides which risk is called 'biggest'
+    informational: true    # still tested, but excluded from the traffic light and the failure list (weak metric)
+    threshold: 0.30
+    direction: higher_is_better
+    plain_name: "Word recall (ROUGE)"
+    question_it_answers: "How much of the approved answer's wording appears in the bot's answer?"
+    business_risk_if_low: "Key words from the approved answer are missing from the bot's answer."
+    likely_owner: "QA: review whether the metric even fits this answer style"
+    failure_template: "Key words from the approved answer are missing."
+
+  exact_match:
+    severity: 4            # 1 = most serious business risk; decides which risk is called 'biggest'
+    threshold: 1.0
+    direction: higher_is_better
+    plain_name: "Exact same answer"
+    question_it_answers: "For short factual questions, is the answer character-for-character identical?"
+    business_risk_if_low: "A short factual answer (a number or a date) is not what we expected."
+    likely_owner: "Engineering: prompt (short-answer format) or HR: check the fact"
+    failure_template: "The short answer is not identical to the expected one."
+
+  string_similarity:
+    severity: 5            # 1 = most serious business risk; decides which risk is called 'biggest'
+    informational: true    # still tested, but excluded from the traffic light and the failure list (weak metric)
+    threshold: 0.40
+    direction: higher_is_better
+    plain_name: "Looks similar (text)"
+    question_it_answers: "How alike are the two texts, letter by letter?"
+    business_risk_if_low: "The text looks very different from the approved answer."
+    likely_owner: "QA: review whether the metric even fits this answer style"
+    failure_template: "The text looks very different from the approved answer."
